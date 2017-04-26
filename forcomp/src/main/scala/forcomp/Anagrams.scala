@@ -98,8 +98,16 @@ object Anagrams {
     def combinationsSingleton(singletonHead: Occurrences, singletonTail: List[Occurrences]): List[Occurrences] ={
       if(singletonTail.isEmpty)Nil
       else {
+        var tmpValue:Occurrences=singletonHead;
         singletonTail.foreach(p => {
-          if(p(0)._1 != singletonHead(0)._1)result += singletonHead ::: p
+          if(p(0)._1 != singletonHead(0)._1){
+            result += singletonHead ::: p
+            if(!tmpValue.toMap.contains(p(0)._1)){
+              tmpValue = tmpValue ::: p
+              if(tmpValue.length > 2)result += tmpValue
+              if(tmpValue.length > 2)result += tmpValue
+            }
+          }
         })
         combinationsSingleton(singletonTail.head, singletonTail.tail)
       }
@@ -194,7 +202,10 @@ object Anagrams {
       val dictionnary=dictionaryByOccurrences
       allCombination.foreach(combi => {
         println(combi)
-        if(dictionnary.contains(combi))result += dictionnary(combi)
+        if(dictionnary.contains(combi)){
+          println(dictionnary(combi))
+          result += dictionnary(combi)
+        }
       })
       result.toList
     }

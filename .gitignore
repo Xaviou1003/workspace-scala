@@ -1,3 +1,5 @@
 *.iml
 target
 project
+.idea/
+src/

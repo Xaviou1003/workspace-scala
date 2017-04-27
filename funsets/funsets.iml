@@ -7,6 +7,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="scala-sdk-2.12.1" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.11.8" level="project" />
+    <orderEntry type="library" name="Maven: org.scalatest:scalatest_2.11:3.2.0-SNAP3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.10" level="project" />
   </component>
 </module>

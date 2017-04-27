@@ -1,4 +1,5 @@
 *.iml
+/src
 target/
 project/
 out/

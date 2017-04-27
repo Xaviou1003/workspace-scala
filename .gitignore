@@ -1,5 +1,6 @@
 *.iml
-target
-project
-*.idea/
+target/
+project/
+out/
+.idea/
 

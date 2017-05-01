@@ -1,7 +1,8 @@
 *.iml
 /src
-target/
 project/
 out/
 .idea/
+
+
 

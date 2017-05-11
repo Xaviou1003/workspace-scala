@@ -1,7 +1,5 @@
 package forcomp
 
-import scala.collection.mutable.ListBuffer
-
 
 object Anagrams {
 
@@ -57,15 +55,7 @@ object Anagrams {
     *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
     *
     */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = {
-    val result = scala.collection.mutable.Map[Occurrences, List[Word]]()
-    dictionary.foreach(word => {
-      val key = wordOccurrences(word)
-      if(result.contains(key))result(key) = result(key) :+ word
-      else result += (key -> List(word))
-    })
-    result.toMap
-  }
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = dictionary.groupBy[Occurrences](ele => wordOccurrences(ele))
 
   /** Returns all the anagrams of a given word. */
   def wordAnagrams(word: Word): List[Word] = dictionaryByOccurrences.get(wordOccurrences(word)).get
@@ -93,7 +83,7 @@ object Anagrams {
     *  Note that the order of the occurrence list subsets does not matter -- the subsets
     *  in the example above could have been displayed in some other order.
     */
-  def combinations(occurrences: Occurrences): List[Occurrences] = {
+  /*def combinations(occurrences: Occurrences): List[Occurrences] = {
     val result = new ListBuffer[Occurrences]()
     def combinationsSingleton(singletonHead: Occurrences, singletonTail: List[Occurrences]): List[Occurrences] ={
       if(singletonTail.isEmpty)Nil
@@ -124,6 +114,12 @@ object Anagrams {
     if(!singletonList.isEmpty)combinationsSingleton(singletonList.head, singletonList.tail)
     result += Nil
     result.toList
+  }*/
+
+  def combinations(occurrences: Occurrences): List[Occurrences] = {
+    (occurrences foldRight List[Occurrences](Nil)) { case ((ch,tm), acc) => {
+      acc ++ ( for { comb <- acc; n <- 1 to tm } yield (ch, n) :: comb )
+    } }
   }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
@@ -137,20 +133,24 @@ object Anagrams {
     *  and has no zero-entries.
     */
   def subtract(x: Occurrences, y: Occurrences): Occurrences = {
-    var m = x.toMap
-    x.foreach(oc1 => {
-      y.foreach(oc2 => {
-        if(oc1._1 == oc2._1){
-          val res = oc1._2 - oc2._2
-          if(res==0){
-            m=m - oc1._1
-          }else {
-            m=m + (oc1._1 -> res)
-          }
-        }
-      })
-    })
-    m.toList
+    def subtract0(x0: Occurrences, y0: Occurrences): Occurrences = y0 match {
+      case Nil => x0
+      case y :: yy =>
+        val (xChar, xInt) = x0.unzip
+        val (yChar, yInt) = y0.unzip
+        val index = xChar.indexOf(yChar.head)
+        val xNew: List[(Char, Int)] = xChar.zip(xInt.updated(index, xInt(index) - yInt.head))
+        subtract0(xNew, yy)
+    }
+    subtract0(x, y) flatMap dropZero
+  }
+  /**
+   * ``dropZero'' replaces an instance of (*, 0) with the empty list.
+   * ``flatMap'' above then takes care of the rest.
+   */
+  def dropZero(elem: (Char, Int)): List[(Char, Int)] = elem match {
+    case (char, 0) => Nil
+    case (char, int) => List((char, int))
   }
 
   /** Returns a list of all anagram sentences of the given sentence.
@@ -194,21 +194,17 @@ object Anagrams {
     *  Note: There is only one anagram of an empty sentence.
     */
   def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
-    val result = new ListBuffer[Sentence]()
-    if(sentence.isEmpty)List(Nil)
-    else {
-      val occ = sentenceOccurrences(sentence)
-      val allCombination = combinations(occ)
-      val dictionnary=dictionaryByOccurrences
-      allCombination.foreach(combi => {
-        println(combi)
-        if(dictionnary.contains(combi)){
-          println(dictionnary(combi))
-          result += dictionnary(combi)
-        }
-      })
-      result.toList
-    }
-
+    def sentenceAnagramsHelper(occurrences: Occurrences, accumulator: List[Sentence]): List[Sentence] =
+      if (occurrences.isEmpty) accumulator
+      else {
+        (for {
+          elem <- combinations(occurrences) filter isWord
+          wordAnagram <- (dictionaryByOccurrences get elem).toList.head
+        } yield sentenceAnagramsHelper(subtract(occurrences, elem), accumulator.map(List(wordAnagram) ::: _))
+          ).flatten
+      }
+    sentenceAnagramsHelper(sentenceOccurrences(sentence), List(List()))
   }
+
+  def isWord(occurrences: Occurrences): Boolean = !(dictionaryByOccurrences get occurrences).isEmpty
 }
